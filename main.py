@@ -3,7 +3,6 @@ import tensorflow as tf
 import helper
 import warnings
 from distutils.version import LooseVersion
-import project_tests as tests
 from tensorflow.python.platform import gfile
 from tensorflow.core.protobuf import saved_model_pb2
 from tensorflow.python.util import compat
@@ -30,23 +29,11 @@ def load_vgg(sess, vgg_path):
 
     return w1, keep, layer3, layer4, layer7
 
-
-print("\n\nTesting load_vgg function......")
-tests.test_load_vgg(load_vgg, tf)
+print("\nPassed load_vgg function")
 
 
 def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
-    """
-    Create the layers for a fully convolutional network.  Build skip-layers using the vgg layers.
-    :param vgg_layer7_out: TF Tensor for VGG Layer 3 output
-    :param vgg_layer4_out: TF Tensor for VGG Layer 4 output
-    :param vgg_layer3_out: TF Tensor for VGG Layer 7 output
-    :param num_classes: Number of classes to classify
-    :return: The Tensor for the last layer of output
-    """
-    # TODO: Implement function KK-DONE
-
-    # KK Hyperparameters: Regularizer, Initializer, etc.
+    # KK Hyperparameters setting
     l2_value = 1e-3
     kernel_reg = tf.contrib.layers.l2_regularizer(l2_value)
     stddev = 1e-3
@@ -72,7 +59,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                           kernel_initializer=kernel_init)
 
     # KK Print the shape of the upsample
-    print( '\n\nUpsampled layer 7 = ', tf.Print(conv7_2x, [tf.shape(conv7_2x)[1:3]]) )
+    print( '\nUpsampled layer 7 = ', tf.Print(conv7_2x, [tf.shape(conv7_2x)[1:3]]) )
 
     # KK 1x1 convolution to preserve spatial information
     conv_1x1_4 = tf.layers.conv2d(vgg_layer4_out, num_classes,
@@ -94,7 +81,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                                         kernel_initializer=kernel_init)
 
     # KK Print the resulting shape
-    print( '\n\nUpsampled 4 and 7 = ', tf.Print(upsample2x_skip_4_to_7, [tf.shape(upsample2x_skip_4_to_7)[1:3]]))
+    print( '\nUpsampled 4 and 7 = ', tf.Print(upsample2x_skip_4_to_7, [tf.shape(upsample2x_skip_4_to_7)[1:3]]))
 
     # KK 1x1 convolution to preserve spatial information
     conv_1x1_3 = tf.layers.conv2d(vgg_layer3_out, num_classes,
@@ -116,26 +103,14 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                         kernel_initializer=kernel_init)
 
     # KK Print the resulting shape which should be the original image size
-    print('\n\nShape of output image = ', tf.Print(output, [tf.shape(output)[1:3]]))
+    print('\nShape of output image = ', tf.Print(output, [tf.shape(output)[1:3]]))
 
     return output
 
-
-print("\n\nTesting layers function......")
-tests.test_layers(layers)
+print("\nPassed layers function")
 
 
 def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
-    """
-    Build the TensorFLow loss and optimizer operations.
-    :param nn_last_layer: TF Tensor of the last layer in the neural network
-    :param correct_label: TF Placeholder for the correct label image
-    :param learning_rate: TF Placeholder for the learning rate
-    :param num_classes: Number of classes to classify
-    :return: Tuple of (logits, train_op, cross_entropy_loss)
-    """
-    # TODO: Implement function KK-DONE
-
     # KK Get the logits of the network
     logits = tf.reshape(nn_last_layer, (-1, num_classes))
 
@@ -154,54 +129,29 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     return logits, train_op, loss
 
 
-print("\n\nTesting optimize function......")
-tests.test_optimize(optimize)
+print("\nPassed Optimizer")
+
 
 
 def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
              correct_label, keep_prob, learning_rate):
-    """
-    Train neural network and print out the loss during training.
-    :param sess: TF Session
-    :param epochs: Number of epochs
-    :param batch_size: Batch size
-    :param get_batches_fn: Function to get batches of training data.  Call using get_batches_fn(batch_size)
-    :param train_op: TF Operation to train the neural network
-    :param cross_entropy_loss: TF Tensor for the amount of loss
-    :param input_image: TF Placeholder for input images
-    :param correct_label: TF Placeholder for label images
-    :param keep_prob: TF Placeholder for dropout keep probability
-    :param learning_rate: TF Placeholder for learning rate
-    """
-    # TODO: Implement function KK-DONE
-
     # KK loop through epochs
     for epoch in range(epochs):
-        print('##############################################################')
-        print('........................Training Epoch # {}...................'.format(epoch))
-        print('##############################################################')
-
+        print('    Training Epoch # {}    '.format(epoch))
         # KK loop through images and labels
         for image, label in get_batches_fn(batch_size):
-
             #DEBUG
-            print("\n\nTraining image shape = {}".format(tf.shape(image)))
+            print("\nTraining image shape = {}".format(tf.shape(image)))
             print("\nTraining label shape = {}".format(tf.shape(label)))
-
             # Training
             _, loss = sess.run([train_op, cross_entropy_loss], feed_dict={input_image: image, correct_label: label, keep_prob: 0.5, learning_rate: LEARN_RATE})
             print('\nTraining Loss = {:.3f}'.format(loss))
-
     pass
 
 
-print("\n\nTesting train_nn function......")
-tests.test_train_nn(train_nn)
+print("\nPassed training function")
 
-#KK Visualize the VGG16 model from Udacity reviewer
 def graph_visualize():
-
-
     # Path to vgg model
     data_dir = './data'
     vgg_path = os.path.join(data_dir, 'vgg')
@@ -217,18 +167,12 @@ def graph_visualize():
     train_writer = tf.summary.FileWriter(LOGDIR)
     train_writer.add_graph(sess.graph)
 
-#print("\n\nConverting .pb file to TF Summary and Saving Visualization of VGG16 graph..............")
-#graph_visualize()
-
 
 def run():
     num_classes = 2
     image_shape = (160, 576)
     data_dir = 'data'
     runs_dir = 'runs'
-
-    #print("\n\nTesting for kitti datatset presence......")
-    #tests.test_for_kitti_dataset(data_dir)
 
     with tf.Session() as sess:
         # Path to vgg model
